@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuario M365</title>
+  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+  <style>
+    body { font-family: Segoe UI, sans-serif; max-width: 480px; margin: 40px auto; padding: 0 16px; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 20px; }
+    .row { margin: 6px 0; }
+    .lbl { font-weight: 600; color: #555; }
+    button { padding: 8px 16px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h3>Sesión Microsoft 365</h3>
+    <div id="info">Cargando...</div>
+    <div id="actions" style="margin-top:12px;"></div>
+  </div>
+
+  <script>
+    // ==== CONFIGURA ESTO ====
+    const CLIENT_ID = "TU_CLIENT_ID";        // App Registration (Azure AD)
+    const TENANT_ID = "TU_TENANT_ID";        // o "common" / "organizations"
+    // =========================
+
+    const msalConfig = {
+      auth: {
+        clientId: CLIENT_ID,
+        authority: `https://login.microsoftonline.com/${TENANT_ID}`,
+        redirectUri: window.location.href.split('#')[0]
+      },
+      cache: { cacheLocation: "sessionStorage" }
+    };
+
+    const pca = new window.msal.PublicClientApplication(msalConfig);
+    const info = document.getElementById("info");
+    const actions = document.getElementById("actions");
+
+    function render(account) {
+      if (account) {
+        info.innerHTML = `
+          <div class="row"><span class="lbl">Nombre:</span> ${account.name || "-"}</div>
+          <div class="row"><span class="lbl">Usuario:</span> ${account.username}</div>
+          <div class="row"><span class="lbl">Tenant:</span> ${account.tenantId}</div>
+          <div class="row"><span class="lbl">OID:</span> ${account.localAccountId}</div>`;
+        actions.innerHTML = `<button id="logout">Cerrar sesión</button>`;
+        document.getElementById("logout").onclick = () => pca.logoutRedirect();
+      } else {
+        info.textContent = "No hay sesión activa.";
+        actions.innerHTML = `<button id="login">Iniciar sesión</button>`;
+        document.getElementById("login").onclick = () =>
+          pca.loginRedirect({ scopes: ["User.Read"] });
+      }
+    }
+
+    pca.initialize().then(() => pca.handleRedirectPromise())
+      .then(resp => {
+        if (resp && resp.account) pca.setActiveAccount(resp.account);
+        const acc = pca.getActiveAccount() || pca.getAllAccounts()[0] || null;
+        render(acc);
+      })
+      .catch(e => { info.textContent = "Error: " + e.message; });
+  </script>
+</body>
+</html>
