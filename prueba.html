@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Consulta</title>
+</head>
+<body>
+
+  <button onclick="consultarFlujo()">Consulta</button>
+
+  <pre id="resultado"></pre>
+
+  <script>
+    async function consultarFlujo() {
+      const urlFlujo = "https://0a42175410a9e905a5d396f9de3af5.05.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/df1fd7e01c544841a74fce959a00a152/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=N9Bk4qQ_8cwh36K_uzcZZZ2ma9j0cVdhx7V1mqjH4Ek";
+
+      document.getElementById("resultado").textContent = "Consultando...";
+
+      try {
+        const respuesta = await fetch(urlFlujo);
+
+        const texto = await respuesta.text();
+
+        document.getElementById("resultado").textContent = texto;
+
+      } catch (error) {
+        document.getElementById("resultado").textContent =
+          "Error al invocar el flujo: " + error.message;
+      }
+    }
+  </script>
+
+</body>
+</html>
